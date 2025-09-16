@@ -1,88 +1,64 @@
-import express, { Express, Request, Response } from 'express';
-import cors from 'cors';
+import express, { Express } from 'express';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { PrismaClient } from '../generated/prisma';
+import { corsMiddleware } from './middleware/corsConfig';
+import { errorHandler } from './middleware/errorHandler';
+import routes from './routes';
+import { db } from './services/database';
 
-
+// Load environment variables
 dotenv.config();
 
 const app: Express = express();
-const prisma = new PrismaClient();
 const port = process.env.PORT || 3001;
 
-// Middleware
+// Security middleware
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(corsMiddleware);
 
-// Health check route
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({
-    status: 'OK',
-    message: 'Land Auction System API đang hoạt động',
-    timestamp: new Date().toISOString()
-  });
-});
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Test database connection
-app.get('/api/test-db', async (req: Request, res: Response) => {
-  try {
-    // Kiểm tra kết nối database
-    await prisma.$queryRaw`SELECT 1`;
-    
-    // Đếm số người dùng
-    const userCount = await prisma.nguoi_dung.count();
-    
-    res.json({
-      status: 'success',
-      message: 'Kết nối database thành công',
-      data: {
-        totalUsers: userCount
-      }
-    });
-  } catch (error) {
-    console.error('Database error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Lỗi kết nối database'
-    });
-  }
-});
+// API routes
+app.use('/api', routes);
 
-// Error handling
-app.use((err: Error, req: Request, res: Response, next: any) => {
-  console.error(err.stack);
-  res.status(500).json({
-    status: 'error',
-    message: 'Đã xảy ra lỗi server'
-  });
-});
+// Error handling middleware (phải đặt cuối cùng)
+app.use(errorHandler);
 
 // Start server
 const server = app.listen(port, () => {
-  console.log(`⚡️[server]: Server đang chạy tại http://localhost:${port}`);
-  console.log(`📊[database]: Đã kết nối tới PostgreSQL`);
+  console.log(`⚡️ [Server]: Đang chạy tại http://localhost:${port}`);
+  console.log(`📊 [Database]: Kết nối PostgreSQL thành công`);
+  console.log(`🌍 [CORS]: Cho phép origin ${process.env.CORS_ORIGIN || 'http://localhost:3000'}`);
+  console.log(`🔧 [Environment]: ${process.env.NODE_ENV || 'development'}`);
 });
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
+const gracefulShutdown = async (signal: string) => {
+  console.log(`\n${signal} nhận được. Đang đóng server...`);
+  
+  server.close(async () => {
+    console.log('HTTP server đã đóng');
+    
+    try {
+      await db.disconnect();
+      console.log('Đã ngắt kết nối database');
+    } catch (error) {
+      console.error('Lỗi khi ngắt kết nối database:', error);
+    }
+    
+    process.exit(0);
   });
-  await prisma.$disconnect();
-  process.exit(0);
-});
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-  });
-  await prisma.$disconnect();
-  process.exit(0);
-});
+  // Force shutdown sau 10 giây
+  setTimeout(() => {
+    console.error('Buộc tắt server do timeout');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;
