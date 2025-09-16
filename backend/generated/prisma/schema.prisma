@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cuoc_dau_gia {
+  ma_cuoc_dau_gia              Int                @id @default(autoincrement())
+  ten_cuoc_dau_gia             String             @db.VarChar(500)
+  mo_ta                        String?
+  thoi_gian_bat_dau            DateTime           @db.Timestamp(6)
+  thoi_gian_ket_thuc           DateTime           @db.Timestamp(6)
+  thoi_gian_nop_ho_so_bat_dau  DateTime           @db.Timestamp(6)
+  thoi_gian_nop_ho_so_ket_thuc DateTime           @db.Timestamp(6)
+  gia_khoi_diem                Decimal            @db.Decimal(18, 0)
+  buoc_gia                     Decimal            @db.Decimal(18, 0)
+  tien_dat_coc                 Decimal            @db.Decimal(18, 0)
+  trang_thai                   String?            @default("draft") @db.VarChar(20)
+  dia_diem_dau_gia             String?
+  yeu_cau_tham_gia             String?
+  ghi_chu                      String?
+  ngay_tao                     DateTime?          @default(now()) @db.Timestamp(6)
+  nguoi_tao                    Int
+  ngay_cap_nhat                DateTime?          @default(now()) @db.Timestamp(6)
+  nguoi_cap_nhat               Int?
+  nguoi_dung                   nguoi_dung         @relation(fields: [nguoi_tao], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_cuoc_dau_gia_nguoi_tao")
+  dang_ky_dau_gia              dang_ky_dau_gia[]
+  ket_qua_dau_gia              ket_qua_dau_gia[]
+  phien_dau_gia                phien_dau_gia[]
+  thua_dat_dau_gia             thua_dat_dau_gia[]
+
+  @@index([thoi_gian_bat_dau, thoi_gian_ket_thuc], map: "idx_cuoc_dau_gia_thoi_gian")
+  @@index([trang_thai], map: "idx_cuoc_dau_gia_trang_thai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model dang_ky_dau_gia {
+  ma_dang_ky                                           Int          @id @default(autoincrement())
+  ma_cuoc_dau_gia                                      Int
+  ma_nguoi_dung                                        Int
+  so_tien_dat_coc                                      Decimal      @db.Decimal(18, 0)
+  hinh_thuc_dat_coc                                    String?      @default("transfer") @db.VarChar(50)
+  ngay_dat_coc                                         DateTime?    @default(now()) @db.Timestamp(6)
+  xac_nhan_dat_coc                                     Boolean?     @default(false)
+  trang_thai_ho_so                                     String?      @default("pending") @db.VarChar(20)
+  ly_do_tu_choi                                        String?
+  so_thu_tu_tham_gia                                   Int?
+  ngay_dang_ky                                         DateTime?    @default(now()) @db.Timestamp(6)
+  nguoi_duyet                                          Int?
+  ngay_duyet                                           DateTime?    @db.Timestamp(6)
+  ghi_chu                                              String?
+  cuoc_dau_gia                                         cuoc_dau_gia @relation(fields: [ma_cuoc_dau_gia], references: [ma_cuoc_dau_gia], onDelete: NoAction, onUpdate: NoAction, map: "fk_dk_dau_gia_cuoc")
+  nguoi_dung_dang_ky_dau_gia_ma_nguoi_dungTonguoi_dung nguoi_dung   @relation("dang_ky_dau_gia_ma_nguoi_dungTonguoi_dung", fields: [ma_nguoi_dung], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_dk_dau_gia_nguoi_dung")
+  nguoi_dung_dang_ky_dau_gia_nguoi_duyetTonguoi_dung   nguoi_dung?  @relation("dang_ky_dau_gia_nguoi_duyetTonguoi_dung", fields: [nguoi_duyet], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_dk_dau_gia_nguoi_duyet")
+
+  @@unique([ma_cuoc_dau_gia, ma_nguoi_dung], map: "idx_dk_dau_gia_unique")
+  @@index([ma_cuoc_dau_gia], map: "idx_dk_dau_gia_cuoc")
+  @@index([ma_nguoi_dung], map: "idx_dk_dau_gia_nguoi_dung")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model don_vi_hanh_chinh {
+  ma_don_vi               String                   @id @db.VarChar(10)
+  ten_don_vi              String                   @db.VarChar(255)
+  cap_don_vi              Int                      @db.SmallInt
+  ma_don_vi_cha           String?                  @db.VarChar(10)
+  toa_do_trung_tam        Unsupported("geometry")?
+  ranh_gioi_hanh_chinh    Unsupported("geometry")?
+  trang_thai              Boolean?                 @default(true)
+  ngay_tao                DateTime?                @default(now()) @db.Timestamp(6)
+  nguoi_tao               Int?
+  don_vi_hanh_chinh       don_vi_hanh_chinh?       @relation("don_vi_hanh_chinhTodon_vi_hanh_chinh", fields: [ma_don_vi_cha], references: [ma_don_vi], onDelete: NoAction, onUpdate: NoAction, map: "fk_dvhc_cha")
+  other_don_vi_hanh_chinh don_vi_hanh_chinh[]      @relation("don_vi_hanh_chinhTodon_vi_hanh_chinh")
+  thua_dat                thua_dat[]
+
+  @@index([cap_don_vi], map: "idx_dvhc_cap_don_vi")
+  @@index([ma_don_vi_cha], map: "idx_dvhc_ma_cha")
+  @@index([ranh_gioi_hanh_chinh], map: "idx_dvhc_ranh_gioi", type: Gist)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model hop_dong_su_dung_dat {
+  ma_hop_dong                                             String     @id @db.VarChar(20)
+  ma_thua_dat                                             String     @db.VarChar(20)
+  ma_ben_nhan                                             Int
+  loai_hop_dong                                           String     @db.VarChar(20)
+  ngay_ky                                                 DateTime   @db.Date
+  ngay_hieu_luc                                           DateTime   @db.Date
+  ngay_ket_thuc                                           DateTime?  @db.Date
+  thoi_han_su_dung                                        Int?
+  gia_tri_hop_dong                                        Decimal    @db.Decimal(18, 0)
+  phi_su_dung_dat                                         Decimal?   @db.Decimal(18, 0)
+  chu_ky_dong_phi                                         Int?       @default(12)
+  muc_dich_su_dung                                        String
+  dieu_kien_su_dung                                       String?
+  trang_thai                                              String?    @default("active") @db.VarChar(20)
+  ghi_chu                                                 String?
+  ngay_tao                                                DateTime?  @default(now()) @db.Timestamp(6)
+  nguoi_tao                                               Int
+  nguoi_dung_hop_dong_su_dung_dat_ma_ben_nhanTonguoi_dung nguoi_dung @relation("hop_dong_su_dung_dat_ma_ben_nhanTonguoi_dung", fields: [ma_ben_nhan], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_hop_dong_ben_nhan")
+  nguoi_dung_hop_dong_su_dung_dat_nguoi_taoTonguoi_dung   nguoi_dung @relation("hop_dong_su_dung_dat_nguoi_taoTonguoi_dung", fields: [nguoi_tao], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_hop_dong_nguoi_tao")
+  thua_dat                                                thua_dat   @relation(fields: [ma_thua_dat], references: [ma_thua_dat], onDelete: NoAction, onUpdate: NoAction, map: "fk_hop_dong_thua")
+
+  @@index([ma_ben_nhan], map: "idx_hop_dong_ben_nhan")
+  @@index([ngay_ket_thuc], map: "idx_hop_dong_ngay_ket_thuc")
+  @@index([ma_thua_dat], map: "idx_hop_dong_thua_dat")
+  @@index([trang_thai], map: "idx_hop_dong_trang_thai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ket_qua_dau_gia {
+  ma_ket_qua            Int          @id @default(autoincrement())
+  ma_cuoc_dau_gia       Int
+  ma_thua_dat           String       @db.VarChar(20)
+  ma_nguoi_thang        Int
+  gia_trung_dau         Decimal      @db.Decimal(18, 0)
+  thoi_gian_ket_thuc    DateTime     @db.Timestamp(6)
+  trang_thai            String?      @default("pending") @db.VarChar(20)
+  han_thanh_toan        DateTime?    @db.Date
+  ngay_thanh_toan       DateTime?    @db.Timestamp(6)
+  so_tien_da_thanh_toan Decimal?     @default(0) @db.Decimal(18, 0)
+  ghi_chu               String?
+  ngay_tao              DateTime?    @default(now()) @db.Timestamp(6)
+  nguoi_tao             Int?
+  cuoc_dau_gia          cuoc_dau_gia @relation(fields: [ma_cuoc_dau_gia], references: [ma_cuoc_dau_gia], onDelete: NoAction, onUpdate: NoAction, map: "fk_kq_dg_cuoc")
+  nguoi_dung            nguoi_dung   @relation(fields: [ma_nguoi_thang], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_kq_dg_nguoi_thang")
+  thua_dat              thua_dat     @relation(fields: [ma_thua_dat], references: [ma_thua_dat], onDelete: NoAction, onUpdate: NoAction, map: "fk_kq_dg_thua")
+
+  @@unique([ma_cuoc_dau_gia, ma_thua_dat])
+  @@index([han_thanh_toan], map: "idx_kq_dg_han_thanh_toan")
+  @@index([trang_thai], map: "idx_kq_dg_trang_thai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lich_su_thay_doi {
+  ma_lich_su          Int        @id @default(autoincrement())
+  bang_du_lieu        String     @db.VarChar(100)
+  ma_ban_ghi          String     @db.VarChar(50)
+  loai_thao_tac       String     @db.VarChar(20)
+  du_lieu_cu          Json?
+  du_lieu_moi         Json?
+  cac_truong_thay_doi String[]
+  thoi_gian_thay_doi  DateTime?  @default(now()) @db.Timestamp(6)
+  nguoi_thay_doi      Int
+  ip_address          String?    @db.Inet
+  ly_do_thay_doi      String?
+  nguoi_dung          nguoi_dung @relation(fields: [nguoi_thay_doi], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_lich_su_nguoi_thay_doi")
+
+  @@index([bang_du_lieu, ma_ban_ghi], map: "idx_lich_su_ban_ghi")
+  @@index([bang_du_lieu], map: "idx_lich_su_bang")
+  @@index([nguoi_thay_doi], map: "idx_lich_su_nguoi_thay_doi")
+  @@index([thoi_gian_thay_doi], map: "idx_lich_su_thoi_gian")
+}
+
+model loai_dat {
+  ma_loai_dat      String     @id @db.VarChar(10)
+  ten_loai_dat     String     @db.VarChar(255)
+  mo_ta            String?
+  mau_sac_hien_thi String?    @default("#CCCCCC") @db.VarChar(7)
+  thu_tu_hien_thi  Int?       @default(0)
+  trang_thai       Boolean?   @default(true)
+  ngay_tao         DateTime?  @default(now()) @db.Timestamp(6)
+  thua_dat         thua_dat[]
+
+  @@index([thu_tu_hien_thi], map: "idx_loai_dat_thu_tu")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model nguoi_dung {
+  ma_nguoi_dung                                                     Int                    @id @default(autoincrement())
+  ten_dang_nhap                                                     String                 @unique @db.VarChar(50)
+  mat_khau_hash                                                     String                 @db.VarChar(255)
+  ho_ten                                                            String                 @db.VarChar(255)
+  email                                                             String?                @unique @db.VarChar(255)
+  so_dien_thoai                                                     String?                @db.VarChar(15)
+  so_cccd                                                           String?                @unique @db.VarChar(12)
+  dia_chi                                                           String?
+  vai_tro                                                           String?                @default("user") @db.VarChar(20)
+  trang_thai_tai_khoan                                              Boolean?               @default(true)
+  lan_dang_nhap_cuoi                                                DateTime?              @db.Timestamp(6)
+  ngay_tao                                                          DateTime?              @default(now()) @db.Timestamp(6)
+  nguoi_tao                                                         Int?
+  ngay_cap_nhat                                                     DateTime?              @default(now()) @db.Timestamp(6)
+  cuoc_dau_gia                                                      cuoc_dau_gia[]
+  dang_ky_dau_gia_dang_ky_dau_gia_ma_nguoi_dungTonguoi_dung         dang_ky_dau_gia[]      @relation("dang_ky_dau_gia_ma_nguoi_dungTonguoi_dung")
+  dang_ky_dau_gia_dang_ky_dau_gia_nguoi_duyetTonguoi_dung           dang_ky_dau_gia[]      @relation("dang_ky_dau_gia_nguoi_duyetTonguoi_dung")
+  hop_dong_su_dung_dat_hop_dong_su_dung_dat_ma_ben_nhanTonguoi_dung hop_dong_su_dung_dat[] @relation("hop_dong_su_dung_dat_ma_ben_nhanTonguoi_dung")
+  hop_dong_su_dung_dat_hop_dong_su_dung_dat_nguoi_taoTonguoi_dung   hop_dong_su_dung_dat[] @relation("hop_dong_su_dung_dat_nguoi_taoTonguoi_dung")
+  ket_qua_dau_gia                                                   ket_qua_dau_gia[]
+  lich_su_thay_doi                                                  lich_su_thay_doi[]
+  phien_dau_gia                                                     phien_dau_gia[]
+  tai_lieu_tai_lieu_nguoi_duyetTonguoi_dung                         tai_lieu[]             @relation("tai_lieu_nguoi_duyetTonguoi_dung")
+  tai_lieu_tai_lieu_nguoi_uploadTonguoi_dung                        tai_lieu[]             @relation("tai_lieu_nguoi_uploadTonguoi_dung")
+  thua_dat                                                          thua_dat[]
+
+  @@index([so_cccd], map: "idx_nguoi_dung_cccd")
+  @@index([email], map: "idx_nguoi_dung_email")
+  @@index([vai_tro], map: "idx_nguoi_dung_vai_tro")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model phien_dau_gia {
+  ma_phien_dau_gia Int          @id @default(autoincrement())
+  ma_cuoc_dau_gia  Int
+  ma_thua_dat      String       @db.VarChar(20)
+  ma_nguoi_dung    Int
+  gia_dau          Decimal      @db.Decimal(18, 0)
+  thoi_gian_dau    DateTime?    @default(now()) @db.Timestamp(6)
+  ip_address       String?      @db.Inet
+  user_agent       String?
+  trang_thai       String?      @default("valid") @db.VarChar(20)
+  cuoc_dau_gia     cuoc_dau_gia @relation(fields: [ma_cuoc_dau_gia], references: [ma_cuoc_dau_gia], onDelete: NoAction, onUpdate: NoAction, map: "fk_phien_dg_cuoc")
+  nguoi_dung       nguoi_dung   @relation(fields: [ma_nguoi_dung], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_phien_dg_nguoi_dung")
+  thua_dat         thua_dat     @relation(fields: [ma_thua_dat], references: [ma_thua_dat], onDelete: NoAction, onUpdate: NoAction, map: "fk_phien_dg_thua")
+
+  @@index([ma_cuoc_dau_gia, ma_thua_dat], map: "idx_phien_dg_cuoc_thua")
+  @@index([gia_dau], map: "idx_phien_dg_gia")
+  @@index([thoi_gian_dau], map: "idx_phien_dg_thoi_gian")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tai_lieu {
+  ma_tai_lieu                                  Int         @id @default(autoincrement())
+  ten_tai_lieu                                 String      @db.VarChar(500)
+  loai_tai_lieu                                String      @db.VarChar(50)
+  kich_thuoc_file                              BigInt?
+  duong_dan_file                               String
+  doi_tuong_lien_quan                          String?     @db.VarChar(50)
+  ma_doi_tuong                                 String?     @db.VarChar(50)
+  mo_ta                                        String?
+  trang_thai_duyet                             String?     @default("pending") @db.VarChar(20)
+  ngay_upload                                  DateTime?   @default(now()) @db.Timestamp(6)
+  nguoi_upload                                 Int
+  nguoi_duyet                                  Int?
+  ngay_duyet                                   DateTime?   @db.Timestamp(6)
+  nguoi_dung_tai_lieu_nguoi_duyetTonguoi_dung  nguoi_dung? @relation("tai_lieu_nguoi_duyetTonguoi_dung", fields: [nguoi_duyet], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_tai_lieu_nguoi_duyet")
+  nguoi_dung_tai_lieu_nguoi_uploadTonguoi_dung nguoi_dung  @relation("tai_lieu_nguoi_uploadTonguoi_dung", fields: [nguoi_upload], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_tai_lieu_nguoi_upload")
+
+  @@index([doi_tuong_lien_quan, ma_doi_tuong], map: "idx_tai_lieu_doi_tuong")
+  @@index([loai_tai_lieu], map: "idx_tai_lieu_loai")
+  @@index([trang_thai_duyet], map: "idx_tai_lieu_trang_thai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model thua_dat {
+  ma_thua_dat          String                   @id @db.VarChar(20)
+  so_thua              String                   @db.VarChar(10)
+  so_to_ban_do         String                   @db.VarChar(10)
+  ma_don_vi            String                   @db.VarChar(10)
+  ma_loai_dat          String                   @db.VarChar(10)
+  ma_trang_thai        String                   @db.VarChar(10)
+  dien_tich_phap_ly    Decimal                  @db.Decimal(12, 2)
+  dien_tich_thuc_te    Decimal?                 @db.Decimal(12, 2)
+  dia_chi              String?
+  toa_do_tam           Unsupported("geometry")?
+  ranh_gioi            Unsupported("geometry")
+  gia_dat_m2           Decimal?                 @db.Decimal(15, 0)
+  gia_dat_tong         Decimal?                 @db.Decimal(18, 0)
+  nam_gia_dat          Int?
+  ghi_chu              String?
+  trang_thai_hoat_dong Boolean?                 @default(true)
+  ngay_nhap_quy_dat    DateTime                 @db.Date
+  ngay_tao             DateTime?                @default(now()) @db.Timestamp(6)
+  nguoi_tao            Int
+  ngay_cap_nhat        DateTime?                @default(now()) @db.Timestamp(6)
+  nguoi_cap_nhat       Int?
+  hop_dong_su_dung_dat hop_dong_su_dung_dat[]
+  ket_qua_dau_gia      ket_qua_dau_gia[]
+  phien_dau_gia        phien_dau_gia[]
+  don_vi_hanh_chinh    don_vi_hanh_chinh        @relation(fields: [ma_don_vi], references: [ma_don_vi], onDelete: NoAction, onUpdate: NoAction, map: "fk_thua_dat_don_vi")
+  loai_dat             loai_dat                 @relation(fields: [ma_loai_dat], references: [ma_loai_dat], onDelete: NoAction, onUpdate: NoAction, map: "fk_thua_dat_loai_dat")
+  nguoi_dung           nguoi_dung               @relation(fields: [nguoi_tao], references: [ma_nguoi_dung], onDelete: NoAction, onUpdate: NoAction, map: "fk_thua_dat_nguoi_tao")
+  trang_thai_quy_dat   trang_thai_quy_dat       @relation(fields: [ma_trang_thai], references: [ma_trang_thai], onDelete: NoAction, onUpdate: NoAction, map: "fk_thua_dat_trang_thai")
+  thua_dat_dau_gia     thua_dat_dau_gia[]
+
+  @@unique([so_thua, so_to_ban_do, ma_don_vi], map: "idx_thua_dat_unique")
+  @@index([dien_tich_phap_ly], map: "idx_thua_dat_dien_tich")
+  @@index([ma_don_vi], map: "idx_thua_dat_don_vi")
+  @@index([ma_loai_dat], map: "idx_thua_dat_loai_dat")
+  @@index([ranh_gioi], map: "idx_thua_dat_ranh_gioi", type: Gist)
+  @@index([toa_do_tam], map: "idx_thua_dat_toa_do", type: Gist)
+  @@index([ma_trang_thai], map: "idx_thua_dat_trang_thai")
+}
+
+model thua_dat_dau_gia {
+  ma_cuoc_dau_gia Int
+  ma_thua_dat     String       @db.VarChar(20)
+  thu_tu_dau_gia  Int?         @default(1)
+  ghi_chu         String?
+  ngay_them       DateTime?    @default(now()) @db.Timestamp(6)
+  id              Int          @id @default(autoincrement())
+  cuoc_dau_gia    cuoc_dau_gia @relation(fields: [ma_cuoc_dau_gia], references: [ma_cuoc_dau_gia], onDelete: Cascade, onUpdate: NoAction, map: "fk_thua_dat_dg_cuoc")
+  thua_dat        thua_dat     @relation(fields: [ma_thua_dat], references: [ma_thua_dat], onDelete: SetNull, onUpdate: NoAction, map: "fk_thua_dat_dg_thua")
+
+  @@unique([ma_cuoc_dau_gia, ma_thua_dat], map: "unique_cuoc_thua")
+}
+
+model trang_thai_quy_dat {
+  ma_trang_thai     String     @id @db.VarChar(10)
+  ten_trang_thai    String     @db.VarChar(100)
+  mo_ta             String?
+  mau_sac           String?    @default("#FFFFFF") @db.VarChar(7)
+  cho_phep_dau_gia  Boolean?   @default(false)
+  cho_phep_cho_thue Boolean?   @default(false)
+  thu_tu_hien_thi   Int?       @default(0)
+  trang_thai        Boolean?   @default(true)
+  ngay_tao          DateTime?  @default(now()) @db.Timestamp(6)
+  thua_dat          thua_dat[]
+}
