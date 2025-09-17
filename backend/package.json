@@ -4,8 +4,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev:https": "ts-node-dev --respawn --transpile-only src/index.ts --https",
     "build": "tsc",
     "start": "node dist/index.js",
+    "create-ssl-certs": "chmod +x scripts/create-ssl-certs.sh && ./scripts/create-ssl-certs.sh",
+    "test:auth": "chmod +x scripts/test-auth.sh && ./scripts/test-auth.sh",
+    "test:auth:https": "chmod +x scripts/test-auth-https.sh && ./scripts/test-auth-https.sh --https",
     "prisma:generate": "npx prisma generate",
     "prisma:pull": "npx prisma db pull",
     "prisma:studio": "npx prisma studio"
@@ -21,14 +25,20 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.16.2",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "helmet": "^8.1.0"
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.5.0",
     "@types/os-utils": "^0.0.4",
     "prisma": "^6.16.2",

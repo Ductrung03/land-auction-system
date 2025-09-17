@@ -9,3 +9,18 @@ dist/
 *.swo
 coverage/
 .nyc_output/
+
+# SSL certificates (development only)
+ssl/
+*.pem
+*.key
+*.cert
+*.crt
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/

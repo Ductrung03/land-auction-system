@@ -6,7 +6,7 @@ const router = Router();
 // Mount routes
 router.use('/', healthRoutes);
 
-// 404 handler
+// 404 handler2
 router.use((req, res) => {
   res.status(404).json({
     status: 'error',
